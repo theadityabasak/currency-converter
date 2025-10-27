@@ -1,5 +1,8 @@
+from flask import Flask, request, jsonify
 import requests
 from datetime import datetime
+
+app = Flask(__name__)
 
 def get_live_rate(base, target):
     try:
@@ -7,13 +10,26 @@ def get_live_rate(base, target):
         data = requests.get(url).json()
         return data['rates'][target]
     except Exception:
-        print("Something went wrong. Please check your input or internet connection.")
         return None
 
-base = input("Enter base currency: ").upper()
-target = input("Enter target currency: ").upper()
+@app.route('/convert')
+def convert():
+    base = request.args.get('base', '').upper()
+    target = request.args.get('target', '').upper()
+    
+    if not base or not target:
+        return jsonify({"error": "Please provide both base and target parameters"}), 400
+    
+    rate = get_live_rate(base, target)
+    if rate:
+        return jsonify({
+            "base": base,
+            "target": target,
+            "rate": rate,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+    else:
+        return jsonify({"error": "Invalid input or API error"}), 400
 
-rate = get_live_rate(base, target)
-if rate:
-    print(f"1 {base} = {rate} {target}")
-    print("Rate fetched on:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+if __name__ == '__main__':
+    app.run(debug=True)
