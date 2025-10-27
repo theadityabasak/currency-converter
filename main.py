@@ -1,4 +1,5 @@
 import requests
+from datetime import datetime
 
 def get_live_rate(base, target):
     try:
@@ -15,3 +16,4 @@ target = input("Enter target currency: ").upper()
 rate = get_live_rate(base, target)
 if rate:
     print(f"1 {base} = {rate} {target}")
+    print("Rate fetched on:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
