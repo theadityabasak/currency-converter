@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 import requests
 from datetime import datetime
+import csv
+import os
 
 app = Flask(__name__)
 
@@ -12,6 +14,15 @@ def get_live_rate(base, target):
     except Exception:
         return None
 
+def save_to_csv(base, target, rate):
+    filename = 'conversion_history.csv'
+    file_exists = os.path.isfile(filename)
+    with open(filename, 'a', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        if not file_exists:
+            writer.writerow(['base', 'target', 'rate', 'timestamp'])
+        writer.writerow([base, target, rate, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+
 @app.route('/convert')
 def convert():
     base = request.args.get('base', '').upper()
@@ -22,6 +33,7 @@ def convert():
     
     rate = get_live_rate(base, target)
     if rate:
+        save_to_csv(base, target, rate)
         return jsonify({
             "base": base,
             "target": target,
